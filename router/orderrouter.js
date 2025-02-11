@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler } = require('../controller/orderController'); // assuming the controller file is `orderController.js`
+const { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler,getAllUserOrdersController } = require('../controller/orderController'); // assuming the controller file is `orderController.js`
 
 // http://localhost:5000/orders/addOrder
 router.post('/addOrder', addOrder);
@@ -10,6 +10,9 @@ router.delete('/deleteorder/:orderid', deleteOrderById);
 
 // http://localhost:5000/orders/allOrders
 router.get('/allOrders', getAllOrdersController);
+
+// http://localhost:5000/orders/allUserOrders
+router.get('/allUserOrders/:userid', getAllUserOrdersController);
 
 router.put('/updateOrder/:orderid', updateOrderHandler);
 

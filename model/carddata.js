@@ -38,11 +38,51 @@ const getadminProductsFromOrders = async () => {
     throw error;
   }
 };
+const getProductsDetails = async () => {
+  console.log("cards fetching")
+  try {
+    const query = `
+      SELECT 
+        productid,
+        productname, 
+       quantity,
+       price
+      FROM products
+     ;
+    `;
+    const result = await client.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+const getuserProductsFromOrders = async (userid) => {
+  try {
+    const query = `
+      SELECT 
+        product, 
+        SUM(quantity) AS totalquantity, 
+        SUM(price) AS totalprice
+      FROM orders
+      WHERE userid = $1
+      GROUP BY product;
+    `;
+    const result = await client.query(query, [userid]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
 
 
 
 
 module.exports = {
   getProductsFromOrders,
-  getadminProductsFromOrders
+  getadminProductsFromOrders,
+  getuserProductsFromOrders,
+  getProductsDetails
 };

@@ -22,12 +22,17 @@ const getAllOrders = async () => {
     const result = await client.query(query);
     return result.rows;
 };
+const getAllUserOrders = async (userid) => {
+    const query = 'SELECT * FROM orders WHERE userid=$1';
+    const result = await client.query(query,[userid]);
+    return result.rows;
+};
 
 
 
 
 const updateOrder = async (orderid, updateData) => {
-    console.log(updateData.price)
+    console.log(updateData.price,"working in update")
     const { product, quantity, price,address, modified_date } = updateData;
     const result = await client.query(
         'UPDATE orders SET product = $1, quantity = $2, price = $3,address=$4, modified_date = $5 WHERE orderid = $6 RETURNING *',
@@ -48,4 +53,5 @@ module.exports = {
     getAllOrders,
     updateOrder,
     deleteOrder,
+    getAllUserOrders
 };

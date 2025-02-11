@@ -44,7 +44,15 @@ const updateProduct = async (productid, updateData) => {
     );
     return result.rows[0];
 };
+const updateProductQuanity = async (productname, quantity) => {
+   
+    const result = await client.query(
+        'UPDATE products SET quantity = $1 WHERE productname = $2 RETURNING *',
+        [quantity,productname ]
+    );
+    return result.rows[0];
+};
 
 
 
-module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct};
+module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct,updateProductQuanity};

@@ -1,4 +1,5 @@
-const { checkOrderExist, createOrder, deleteOrder, getAllOrders, updateOrder } = require('../model/orderdb');
+const { checkOrderExist, createOrder, deleteOrder, getAllOrders, updateOrder,getAllUserOrders } = require('../model/orderdb');
+const {updateProductQuanity}= require('../model/productdb')
 const client = require('../dbconfig');
 const moment = require('moment');
 
@@ -69,7 +70,7 @@ const addOrder = async (req, res) => {
 
     try {
         // Check if the product exists in the product table
-        const productQuery = await client.query('SELECT price FROM products WHERE productname = $1', [product]);
+        const productQuery = await client.query('SELECT price,quantity FROM products WHERE productname = $1', [product]);
 
         if (productQuery.rows.length === 0) {
             return res.status(404).json({
@@ -83,11 +84,13 @@ const addOrder = async (req, res) => {
         if (existingOrder) {
             return res.status(400).json({ message: 'Order with this product and userid already exists.' });
         }
-
+            
         const originalDate = new Date();
         const created_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
         const modified_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
-
+         let originaquantity = productQuery.rows[0].quantity;
+        originaquantity = originaquantity - quantity;
+        const updatedDataInProduct = await updateProductQuanity(product,originaquantity)
         const lastOrder = await client.query('SELECT orderid FROM orders ORDER BY created_date DESC LIMIT 1');
         const lastGeneratedId = lastOrder.rows.length > 0 ? lastOrder.rows[0].orderid : 'O-0000A0001'; // Default ID if no order exists
     
@@ -148,6 +151,7 @@ const deleteOrderById = async (req, res) => {
 };
 
 // Get all orders
+
 const getAllOrdersController = async (req, res) => {
     console.log("getting orders data")
     try {
@@ -181,7 +185,40 @@ const getAllOrdersController = async (req, res) => {
         });
     }
 };
+const getAllUserOrdersController = async (req, res) => {
+    const {userid} = req.params;
+    console.log("getting orders data")
+    try {
+        const orders = await getAllUserOrders(userid);
+        
+        if (orders.length === 0) {
+            return res.status(404).json({
+                message: 'No orders found.',
+            });
+        }
 
+        const orderDetails = orders.map(order => ({
+            orderid: order.orderid,
+            product: order.product,
+            quantity: order.quantity,
+            price: order.price,
+            address: order.address,
+            paymentMethod: order.paymentmethod,
+        }));
+  console.log("datas", orderDetails)
+        return res.status(200).json({
+            message: 'Orders fetched successfully.',
+            orders: orderDetails,
+        });
+
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        return res.status(500).json({
+            message: 'Error fetching orders.',
+            error: error.message,
+        });
+    }
+};
 
 // const { getProductsFromOrders } = require('../services/orderService'); // Adjust the path to your service layer
 
@@ -247,11 +284,11 @@ const updateOrderHandler = async (req, res) => {
     // console.log(address)
 
     try {
-       
+        let productQuery;
         let finalPrice = price;
         if (product) {
-            const productQuery = await client.query('SELECT price FROM products WHERE productname = $1', [product]);
-
+             productQuery = await client.query('SELECT price,quantity FROM products WHERE productname = $1', [product]);
+  
             if (productQuery.rows.length === 0) {
                 return res.status(404).json({
                     message: 'Product not found.',
@@ -261,12 +298,24 @@ const updateOrderHandler = async (req, res) => {
             finalPrice = productQuery.rows[0].price; // Get the product price
         }
         finalPrice = finalPrice * quantity;
-
+        let TotalQuantity = productQuery.rows[0].quantity;
+        if (TotalQuantity < quantity) {
+            return res.status(400).json({
+                message: 'Order quantity exceeds available product stock.',
+            });
+        }
+        TotalQuantity -= quantity;
+       
         const order = await client.query('SELECT * FROM orders WHERE orderid = $1', [orderid]);
 
         if (!order.rows.length) {
             return res.status(404).json({
                 message: 'Order not found.',
+            });
+        }
+        if(order.rows[0].quantity > quantity){
+            return res.status(404).json({
+                message: 'quantity greater than previous',
             });
         }
 
@@ -277,7 +326,12 @@ const updateOrderHandler = async (req, res) => {
         if (finalPrice !== undefined) updateData.price = finalPrice;
         if (address) updateData.address = address;
         if (paymentMethod) updateData.paymentMethod = paymentMethod;
+         if(product && quantity){
 
+
+
+            await updateProductQuanity(product,TotalQuantity);
+         }
         const originalDate = new Date(); 
         const modified_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
         updateData.modified_date = modified_date;
@@ -298,4 +352,4 @@ const updateOrderHandler = async (req, res) => {
     }
 };
 
-module.exports = { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler };
+module.exports = { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler,getAllUserOrdersController };
