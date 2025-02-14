@@ -84,5 +84,5 @@ module.exports = {
   getProductsFromOrders,
   getadminProductsFromOrders,
   getuserProductsFromOrders,
-  getProductsDetails
+  // getProductsDetails
 };

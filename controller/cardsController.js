@@ -17,11 +17,13 @@ const getAdminProducts = async (req, res) => {
    
     const products = await getadminProductsFromOrders();
    
-    res.json(products);
+  return  res.json(products);
+  
   } catch (error) {
     console.error('Error fetching product data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  return 2;
 };
 const getuserProducts = async (req, res) => {
   const {userid}= req.params;

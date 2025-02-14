@@ -93,7 +93,7 @@ const registerUser = async (req, res) => {
     const newUser = await createUser(
       id, firstname, lastname, role, email, hashedpassword, created_date, last_modified_date, is_verified
     );
-
+  console.log(newUser)
     return res.status(201).json({
       message: 'User registered successfully',
       user: {

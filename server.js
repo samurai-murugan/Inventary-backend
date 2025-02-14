@@ -4,10 +4,10 @@ require('dotenv').config();
 const cors = require('cors');
 const bcrypt = require('bcrypt'); 
 const userRouter = require('./router/routes');
-const productRouter = require('./router/productroutes')
-const orderRouter = require('./router/orderrouter')
-const charRouter = require('./router/chartrouter')
-const carddatas = require('./router/cardsrouter')
+const productRouter = require('./router/product.routes')
+const orderRouter = require('./router/order.router')
+const charRouter = require('./router/chart.router')
+const carddatas = require('./router/cards.router')
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());

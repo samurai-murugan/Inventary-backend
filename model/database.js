@@ -21,6 +21,7 @@ const getUserByEmail = async (email) => {
   const query = 'SELECT * FROM users WHERE email_id = $1';
   const result = await client.query(query, [email]);
   if (result.rows.length > 0) {
+    console.log("user", result)
     return result.rows[0]; 
   }
   return null;  

@@ -77,7 +77,11 @@ const addOrder = async (req, res) => {
                 message: 'Product not found.',
             });
         }
-
+        if(productQuery.rows[0].quantity < quantity){
+            return res.status(405).json({
+                message:`please order lessthan ${productQuery.rows[0].quantity} quantity` 
+            })
+        }
         let price = productQuery.rows[0].price; 
            price = price * quantity;
         const existingOrder = await checkOrderExist(product,userId);
@@ -85,9 +89,13 @@ const addOrder = async (req, res) => {
             return res.status(400).json({ message: 'Order with this product and userid already exists.' });
         }
             
-        const originalDate = new Date();
+        const originalDate = new Date().toLocaleString('en-US', {
+            timeZone: 'Asia/Calcutta'
+        });
+        console.log("original date", originalDate)
         const created_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
         const modified_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
+        console.log(created_date,"created Date")
          let originaquantity = productQuery.rows[0].quantity;
         originaquantity = originaquantity - quantity;
         const updatedDataInProduct = await updateProductQuanity(product,originaquantity)
@@ -170,6 +178,8 @@ const getAllOrdersController = async (req, res) => {
             price: order.price,
             address: order.address,
             paymentMethod: order.paymentmethod,
+            userid:order.userid,
+            username:order.username
         }));
   console.log("datas", orderDetails)
         return res.status(200).json({

@@ -1,10 +1,9 @@
 const bcrypt = require('bcryptjs');
-const {  getUserByEmail } = require('../model/database');  
+const { getUserByEmail } = require('../model/database');  
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  console.log(email,password)
-  // console.log(id)
+  console.log(email, password);
 
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
@@ -14,10 +13,8 @@ const loginUser = async (req, res) => {
   }
 
   try {
-  
     const user = await getUserByEmail(email);
     if (!user) {
-      // console.log("sam")
       return res.status(400).json({ message: 'User not found' });
     }
 
@@ -26,13 +23,18 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Check if the user is verified
+    if (user.is_verified === false) {
+      return res.status(400).json({ message: 'Account is not verified.' });
+    }
 
+    // If user is verified, send a successful login response
     return res.status(200).json({
       message: 'User login successful',
       user: {
         id: user.id,
-        firstname:user.firstname,
-        userName:  user.firstname + ' ' + user.lastname,
+        firstname: user.firstname,
+        userName: user.firstname + ' ' + user.lastname,
         email: user.email_id,
         role: user.role, 
       },
