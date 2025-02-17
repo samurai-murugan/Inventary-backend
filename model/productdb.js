@@ -38,6 +38,7 @@ const deleteProduct = async (productid) => {
 
 const updateProduct = async (productid, updateData) => {
     const { productname, quantity, price, modified_date } = updateData;
+    console.log(productname, quantity, price, modified_date )
     const result = await client.query(
         'UPDATE products SET productname = $1, quantity = $2, price = $3, modified_date = $4 WHERE productid = $5 RETURNING *',
         [productname, quantity, price, modified_date, productid]
@@ -53,6 +54,17 @@ const updateProductQuanity = async (productname, quantity) => {
     return result.rows[0];
 };
 
-
-
-module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct,updateProductQuanity};
+const getProductPerPrice = async ()=>{
+    const result = await client.query('SELECT productname, price FROM products');
+    return result.rows;
+}
+const getProductsName = async () => {
+    try {
+      const result = await client.query('SELECT productname FROM products');
+      return result.rows; // This will return an array of rows from the query
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error; // Rethrow error to be handled by the calling function
+    }
+  };
+module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct,updateProductQuanity,getProductPerPrice,getProductsName};

@@ -1,4 +1,4 @@
-const { checkProductExist, createProduct, deleteProduct, getAllProducts,updateProduct } = require('../model/productdb');
+const { checkProductExist, createProduct, deleteProduct, getAllProducts,updateProduct,getProductPerPrice,getProductsName } = require('../model/productdb');
 const client = require('../dbconfig');
 const moment = require('moment');
 
@@ -39,6 +39,7 @@ const generateNewId = async (lastGeneratedId) => {
 
 const addProducts = async (req, res) => {
     const { productname, quantity, price } = req.body;
+    console.log(productname, quantity, price)
 
     if (!productname || typeof productname !== 'string') {
         return res.status(400).json({
@@ -72,7 +73,7 @@ const addProducts = async (req, res) => {
         const lastGeneratedId = lastProduct.rows.length > 0 ? lastProduct.rows[0].productid : 'P-0000A0001'; // Default ID if no product exists
     
         const productid = await generateNewId(lastGeneratedId);
-
+                                              //productid, productname, price, quantity, created_date, modified_date,created_date
         const newProduct = await createProduct(productid, productname, price, quantity, created_date, modified_date);
 
         return res.status(201).json({
@@ -135,13 +136,42 @@ const getAllProductsController = async (req, res) => {
                 message: 'No products found.',
             });
         }
+     
+        const productDetails = products.map(product => {
+          
+            const added_date = new Date(product.created_date);
+        
+            const options = {
+               
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+            };
+            
+            // Convert to IST and format as 'YYYY-MM-DD hh:mm AM/PM'
+            const formattedDate = added_date.toLocaleString('en-IN', options).replace(',', '').replace(/\//g, '-');
+            const formattedPrice = parseFloat(product.price).toLocaleString('en-IN', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            return {
+                id: product.productid,
+                productname: product.productname,
+                quantity:Number(product.quantity).toLocaleString(),
+                price: formattedPrice,
+                productAddedDate: formattedDate,
+            };
+        });
 
-        const productDetails = products.map(product => ({
-            id: product.productid,
-            productname: product.productname,
-            quantity: product.quantity,
-            price: product.price,
-        }));
+        // const productDetails = products.map(product => ({
+        //     id: product.productid,
+        //     productname: product.productname,
+        //     quantity: product.quantity,
+        //     price: product.price,
+        // }));
 
     
         return res.status(200).json({
@@ -170,6 +200,8 @@ const updateProductHandler = async (req, res) => {
     console.log(productid)
     console.log(productname,quantity,price) 
 
+    console.log("price",price)
+     
     if (productname && typeof productname !== 'string') {
         return res.status(400).json({
             message: 'Product name must be a valid string.',
@@ -182,7 +214,7 @@ const updateProductHandler = async (req, res) => {
         });
     }
 
-    if (price !== undefined && (isNaN(price) || price <= 0)) {
+    if (price == undefined ) {
         return res.status(400).json({
             message: 'Product price must be a positive number.',
         });
@@ -230,6 +262,39 @@ const updateProductHandler = async (req, res) => {
 };
 
 
+const getProductPrices = async (req, res) => {
 
+    console.log("product price")
+    try {
 
-module.exports = { addProducts, deleteProductById, getAllProductsController ,updateProductHandler};
+      const result = await getProductPerPrice();
+  
+      const productPrices = result.reduce((acc, row) => {
+        acc[row.productname] = row.price;
+        return acc;
+      }, {});
+  
+      // Send the product prices as JSON
+      res.json(productPrices);
+    } catch (error) {
+      console.error('Error fetching product prices', error);
+    return res.status(500).json({ message: 'Error fetching product prices' });
+    }
+  };
+  const getProducts = async (req, res) => {
+    console.log("Fetching product names...");
+  
+    try {
+      
+      const result = await getProductsName(); 
+      const productNames = result.map(row => row.productname);
+    return res.json(productNames);
+  
+    } catch (error) {
+      console.error('Error fetching product names:', error);
+     return res.status(500).json({ message: 'Error fetching product names' });
+    }
+  };
+  
+
+module.exports = { addProducts, deleteProductById, getAllProductsController ,updateProductHandler,getProductPrices,getProducts};

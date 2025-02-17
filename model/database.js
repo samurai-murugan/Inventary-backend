@@ -49,9 +49,13 @@ const updateUserVerification = async (id, isVerified) => {
   return result.rows.length > 0 ? result.rows[0] : null; 
 };
 const updateUserDetails = async (id, firstname, lastname) => {
+
+  let Firstname = firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase();
+
   const query = 'UPDATE users SET firstname = $1, lastname = $2 WHERE id = $3 RETURNING *';
+  //last_modified = NOW()
   
-  const result = await client.query(query, [firstname, lastname, id]);
+  const result = await client.query(query, [Firstname, lastname, id]);
   
   return result.rows.length > 0 ? result.rows[0] : null; 
 };
@@ -60,7 +64,10 @@ const updateUserDetails = async (id, firstname, lastname) => {
 
 const getAllUsers = async () => {
   try {
-    const result = await client.query('SELECT * FROM users');
+    const result = await client.query(
+      `SELECT * FROM users
+        ORDER BY last_modified_date DESC
+      `);
     return result.rows; 
   } catch (error) {
     console.error('Error fetching users:', error);

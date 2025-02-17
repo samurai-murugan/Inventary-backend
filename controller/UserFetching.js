@@ -29,7 +29,7 @@ const getUsers = async (req, res) => {
     }
   } catch (error) {
     console.error('Error fetching users:', error.message);
-    res.status(500).json({ error: 'Failed to fetch users from the database' });
+    return res.status(500).json({ error: 'Failed to fetch users from the database' });
   }
 };
 const getUsersByid = async (req, res) => {
@@ -57,12 +57,12 @@ const getUsersByid = async (req, res) => {
         is_verified: user.is_verified,
       }));
       
-     
-      res.json(userDetails);
+     console.log(userDetails)
+    return  res.json(userDetails);
     }
   } catch (error) {
     console.error('Error fetching users:', error.message);
-    res.status(500).json({ error: 'Failed to fetch users from the database' });
+   return res.status(500).json({ error: 'Failed to fetch users from the database' });
   }
 };
 
@@ -79,10 +79,10 @@ const createUser = async (req, res) => {
 
 
     const newUser = await UserModel.createUser(id, firstname, lastname, role, email_id, hashedpassword, created_date, last_modified_date, is_verified);
-    res.status(201).json(newUser); 
+   return res.status(201).json(newUser); 
   } catch (error) {
     console.error('Error creating user:', error.message);
-    res.status(500).json({ error: 'Failed to create user' });
+   return res.status(500).json({ error: 'Failed to create user' });
   }
 };
 
@@ -95,31 +95,31 @@ const updateUserVerification = async (req, res) => {
     console.log("update",id)
     const updatedUser = await UserModel.updateUserVerification(id, isVerified);
     if (updatedUser) {
-      res.status(200).json(updatedUser); 
+    return  res.status(200).json(updatedUser); 
     } else {
-      res.status(404).json({ error: 'User not found' });
+    return  res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
     console.error('Error updating user verification status:', error.message);
-    res.status(500).json({ error: 'Failed to update user' });
+   return res.status(500).json({ error: 'Failed to update user' });
   }
 };
 const updateUserdata = async (req, res) => {
   console.log("upadteuser")
   const { id } = req.params;
   const { firstname,lastname } = req.body;
-
+ 
   try {
     console.log("update",id,firstname,lastname)
     const updatedUser = await UserModel.updateUserDetails(id, firstname, lastname);
     if (updatedUser) {
-      res.json(updatedUser); 
+    return  res.json(updatedUser); 
     } else {
-      res.status(404).json({ error: 'User not found' });
+    return  res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
     console.error('Error updating user verification status:', error.message);
-    res.status(500).json({ error: 'Failed to update user' });
+   return res.status(500).json({ error: 'Failed to update user' });
   }
 };
 
@@ -130,13 +130,13 @@ const deleteUser = async (req, res) => {
   try {
     const deletedUser = await UserModel.deleteUser(id);
     if (deletedUser) {
-      res.json({ message: 'User deleted successfully', user: deletedUser });
+     return res.json({ message: 'User deleted successfully', user: deletedUser });
     } else {
-      res.status(404).json({ error: 'User not found' });
+    return  res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
     console.error('Error deleting user:', error.message);
-    res.status(500).json({ error: 'Failed to delete user' });
+  return  res.status(500).json({ error: 'Failed to delete user' });
   }
 };
 

@@ -84,10 +84,10 @@ const addOrder = async (req, res) => {
         }
         let price = productQuery.rows[0].price; 
            price = price * quantity;
-        const existingOrder = await checkOrderExist(product,userId);
-        if (existingOrder) {
-            return res.status(400).json({ message: 'Order with this product and userid already exists.' });
-        }
+        // const existingOrder = await checkOrderExist(product,userId);
+        // if (existingOrder) {
+        //     return res.status(400).json({ message: 'Order with this product and userid already exists.' });
+        // }
             
         const originalDate = new Date().toLocaleString('en-US', {
             timeZone: 'Asia/Calcutta'
@@ -100,7 +100,7 @@ const addOrder = async (req, res) => {
         originaquantity = originaquantity - quantity;
         const updatedDataInProduct = await updateProductQuanity(product,originaquantity)
         const lastOrder = await client.query('SELECT orderid FROM orders ORDER BY created_date DESC LIMIT 1');
-        const lastGeneratedId = lastOrder.rows.length > 0 ? lastOrder.rows[0].orderid : 'O-0000A0001'; // Default ID if no order exists
+        const lastGeneratedId = lastOrder.rows.length > 0 ? lastOrder.rows[0].orderid : 'O-2025A0000'; // Default ID if no order exists
     
         const orderid = await generateNewOrderId(lastGeneratedId);
 
@@ -171,16 +171,50 @@ const getAllOrdersController = async (req, res) => {
             });
         }
 
-        const orderDetails = orders.map(order => ({
-            orderid: order.orderid,
-            product: order.product,
-            quantity: order.quantity,
-            price: order.price,
-            address: order.address,
-            paymentMethod: order.paymentmethod,
-            userid:order.userid,
-            username:order.username
-        }));
+        // const orderDetails = orders.map(order => ({
+        //     orderid: order.orderid,
+        //     product: order.product,
+        //     quantity: order.quantity,
+        //     price: order.price,
+        //     address: order.address,
+        //     paymentMethod: order.paymentmethod,
+        //     userid:order.userid,
+        //     username:order.username,
+        //     ordered_date:order.created_date
+        // }));
+        const orderDetails = orders.map(order => {
+          
+            const orderDate = new Date(order.created_date);
+        
+            const options = {
+               
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+            };
+            
+            // Convert to IST and format as 'YYYY-MM-DD hh:mm AM/PM'
+            const formattedDate = orderDate.toLocaleString('en-IN', options).replace(',', '').replace(/\//g, '-');
+            const formattedPrice = parseFloat(order.price).toLocaleString('en-IN', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            return {
+                orderid: order.orderid,
+                product: order.product,
+                quantity: order.quantity.toLocaleString(),
+                price:formattedPrice,
+                address: order.address,
+                paymentMethod: order.paymentmethod,
+                userid: order.userid,
+                username: order.username,
+                ordered_date: formattedDate
+            };
+        });
+        
   console.log("datas", orderDetails)
         return res.status(200).json({
             message: 'Orders fetched successfully.',
@@ -207,14 +241,48 @@ const getAllUserOrdersController = async (req, res) => {
             });
         }
 
-        const orderDetails = orders.map(order => ({
-            orderid: order.orderid,
-            product: order.product,
-            quantity: order.quantity,
-            price: order.price,
-            address: order.address,
-            paymentMethod: order.paymentmethod,
-        }));
+        // const orderDetails = orders.map(order => ({
+        //     orderid: order.orderid,
+        //     product: order.product,
+        //     quantity: order.quantity,
+        //     price: order.price,
+        //     address: order.address,
+        //     paymentMethod: order.paymentmethod,
+
+        // }));
+
+        const orderDetails = orders.map(order => {
+          
+            const orderDate = new Date(order.created_date);
+        
+            const options = {
+               
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+            };
+            
+            // Convert to IST and format as 'YYYY-MM-DD hh:mm AM/PM'
+            const formattedDate = orderDate.toLocaleString('en-IN', options).replace(',', '').replace(/\//g, '-');
+            const formattedPrice = parseFloat(order.price).toLocaleString('en-IN', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            return {
+                orderid: order.orderid,
+                product: order.product,
+                quantity: order.quantity.toLocaleString(),
+                price:formattedPrice,
+                address: order.address,
+                paymentMethod: order.paymentmethod,
+                userid: order.userid,
+                username: order.username,
+                ordered_date: formattedDate
+            };
+        });
   console.log("datas", orderDetails)
         return res.status(200).json({
             message: 'Orders fetched successfully.',
@@ -249,9 +317,6 @@ const getTotalPriceAndQuantityByProduct = async (req, res) => {
   }
 };
 
-module.exports = {
-  getTotalPriceAndQuantityByProduct,
-};
 
 
 
@@ -304,7 +369,11 @@ const updateOrderHandler = async (req, res) => {
                     message: 'Product not found.',
                 });
             }
-
+          if(productQuery.rows[0].quantity<quantity){
+            return res.status(404).json({
+                message:"please select less than the stockitem",
+            })
+          }
             finalPrice = productQuery.rows[0].price; // Get the product price
         }
         finalPrice = finalPrice * quantity;
@@ -362,4 +431,4 @@ const updateOrderHandler = async (req, res) => {
     }
 };
 
-module.exports = { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler,getAllUserOrdersController };
+module.exports = { addOrder, deleteOrderById, getAllOrdersController, updateOrderHandler,getAllUserOrdersController,getTotalPriceAndQuantityByProduct };

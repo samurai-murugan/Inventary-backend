@@ -29,7 +29,8 @@ const getadminProductsFromOrders = async () => {
         SUM(quantity) AS totalquantity, 
         SUM(price) AS totalprice
       FROM orders
-      GROUP BY product;
+      GROUP BY product 
+      ORDER BY product ASC;
     `;
     const result = await client.query(query);
     return result.rows;
@@ -47,7 +48,7 @@ const getProductsDetails = async () => {
         productname, 
        quantity,
        price
-      FROM products
+      FROM products order by productname ASC
      ;
     `;
     const result = await client.query(query);
@@ -84,5 +85,5 @@ module.exports = {
   getProductsFromOrders,
   getadminProductsFromOrders,
   getuserProductsFromOrders,
-  // getProductsDetails
+  getProductsDetails
 };

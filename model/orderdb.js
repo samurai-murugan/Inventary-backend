@@ -8,6 +8,8 @@ const checkOrderExist = async (product,userid) => {
 };
 
 const createOrder = async (orderid, product, quantity, price, address, paymentMethod, created_date, modified_date,userid) => {
+  console.log("order_id",orderid)
+  
     const query = `
         INSERT INTO orders (orderid,product, quantity, price, address, paymentmethod, created_date, modified_date,userid )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
@@ -20,7 +22,7 @@ const createOrder = async (orderid, product, quantity, price, address, paymentMe
 const getAllOrders = async () => {
     // const query = 'SELECT * FROM orders';
     // const query = 'SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, users.firstname FROM orders JOIN users ON orders.userid = users.id';
-    const query = `SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, CONCAT(users.firstname, ' ', users.lastname) AS username FROM orders JOIN users ON orders.userid = users.id`;
+    const query = `SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, CONCAT(users.firstname, ' ', users.lastname) AS username ,orders.created_date FROM orders JOIN users ON orders.userid = users.id`;
     const result = await client.query(query);
     return result.rows;
 };
@@ -45,9 +47,33 @@ const updateOrder = async (orderid, updateData) => {
 
 
 const deleteOrder = async (orderid) => {
-    const query = 'DELETE FROM orders WHERE orderid = $1';
-    await client.query(query, [orderid]);
+    try {
+
+
+        console.log("deleting",orderid)
+        const orderItemsQuery = `
+            SELECT product, quantity FROM orders WHERE orderid = $1
+        `;
+        const res = await client.query(orderItemsQuery, [orderid]);
+
+        for (const item of res.rows) {
+            const updateProductQuery = `
+                   UPDATE products
+                   SET quantity = (quantity::INTEGER + $1)
+                   WHERE productname = $2
+            `;
+            await client.query(updateProductQuery, [item.quantity, item.product]);
+        }
+
+        const deleteOrderQuery = 'DELETE FROM orders WHERE orderid = $1';
+        await client.query(deleteOrderQuery, [orderid]);
+
+        console.log(`Order with ID ${orderid} and related products have been updated and deleted.`);
+    } catch (error) {
+        console.error('Error deleting order:', error);
+    }
 };
+
 
 module.exports = {
     checkOrderExist,
