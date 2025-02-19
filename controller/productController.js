@@ -1,4 +1,4 @@
-const { checkProductExist, createProduct, deleteProduct, getAllProducts,updateProduct,getProductPerPrice,getProductsName } = require('../model/productdb');
+const { checkProductExist, createProduct, deleteProduct, getAllProducts,updateProduct,getProductPerPrice,getProductsName,getProductQuanatity } = require('../model/productdb');
 const client = require('../dbconfig');
 const moment = require('moment');
 
@@ -70,7 +70,7 @@ const addProducts = async (req, res) => {
         const modified_date = moment(originalDate).format('YYYY-MM-DD HH:mm');
 
         const lastProduct = await client.query('SELECT productid FROM products ORDER BY created_date DESC LIMIT 1');
-        const lastGeneratedId = lastProduct.rows.length > 0 ? lastProduct.rows[0].productid : 'P-0000A0001'; // Default ID if no product exists
+        const lastGeneratedId = lastProduct.rows.length > 0 ? lastProduct.rows[0].productid : 'P-2025A0001'; // Default ID if no product exists
     
         const productid = await generateNewId(lastGeneratedId);
                                               //productid, productname, price, quantity, created_date, modified_date,created_date
@@ -296,5 +296,18 @@ const getProductPrices = async (req, res) => {
     }
   };
   
+  const getProductQuanatityAndProduct = async(req,res)=>{
+    const{productname} = req.params;
 
-module.exports = { addProducts, deleteProductById, getAllProductsController ,updateProductHandler,getProductPrices,getProducts};
+    console.log("product name", productname)
+    try{
+        const result = await getProductQuanatity(productname);
+         return res.status(200).json(result);
+    }
+    catch(error){
+        console.error('errore fetching product name and quantity',error);
+        return res.status(500).json({ message:'error fetching product name and quantity'});
+    }
+  }
+
+module.exports = { addProducts, deleteProductById, getAllProductsController ,updateProductHandler,getProductPrices,getProducts,getProductQuanatityAndProduct};

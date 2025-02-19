@@ -67,4 +67,15 @@ const getProductsName = async () => {
       throw error; // Rethrow error to be handled by the calling function
     }
   };
-module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct,updateProductQuanity,getProductPerPrice,getProductsName};
+
+  const getProductQuanatity = async(productname)=>{
+    try{
+        const result = await client.query('SELECT quantity FROM products WHERE productname = $1',[productname])
+       return result.rows;
+    }
+    catch(error){
+        console.error('Error fetcing products and quantity');
+        throw error;
+    }
+  }
+module.exports = { checkProductExist, createProduct, deleteProduct,getAllProducts,updateProduct,updateProductQuanity,getProductPerPrice,getProductsName,getProductQuanatity};

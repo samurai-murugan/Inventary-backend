@@ -22,12 +22,12 @@ const createOrder = async (orderid, product, quantity, price, address, paymentMe
 const getAllOrders = async () => {
     // const query = 'SELECT * FROM orders';
     // const query = 'SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, users.firstname FROM orders JOIN users ON orders.userid = users.id';
-    const query = `SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, CONCAT(users.firstname, ' ', users.lastname) AS username ,orders.created_date FROM orders JOIN users ON orders.userid = users.id`;
+    const query = `SELECT orders.orderid, orders.product, orders.quantity, orders.price, orders.address, orders.paymentmethod, orders.userid, CONCAT(users.firstname, ' ', users.lastname) AS username ,orders.created_date FROM orders JOIN users ON orders.userid = users.id ORDER by orders.modified_date DESC`;
     const result = await client.query(query);
     return result.rows;
 };
 const getAllUserOrders = async (userid) => {
-    const query = 'SELECT * FROM orders WHERE userid=$1';
+    const query = 'SELECT * FROM orders WHERE userid=$1 ORDER by modified_date DESC';
     const result = await client.query(query,[userid]);
     return result.rows;
 };
